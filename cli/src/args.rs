@@ -10,11 +10,11 @@ pub struct Args {
     /// When provided, this overrides the -g (glob) arg.
     pub path: Option<PathBuf>,
 
-    #[clap(short = 'i', default_value = "false")]
+    #[clap(short = 'i')]
     /// Matches case insensitively
     pub ignore_case: bool,
 
-    #[clap(short = 'v', default_value = "false")]
+    #[clap(short = 'v')]
     /// Inverts matching criteria. Shows lines that do not match provided patterns.
     pub invert_match: bool,
 
