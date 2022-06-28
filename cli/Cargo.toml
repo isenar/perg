@@ -8,5 +8,4 @@ edition = "2021"
 [dependencies]
 perg = { path = "../core", package = "perg" }
 
-atty = "0.2.14"
 clap =  { version = "3.1.18", features = ["derive"] }
