@@ -1,16 +1,13 @@
 pub mod config;
-pub mod printer;
+pub mod output;
 pub mod searchers;
 
-use regex::Regex;
-
 use crate::config::SearchConfig;
+use crate::searchers::{Searcher, SingleFileSearcher};
 use itertools::Itertools;
+
 use std::error::Error;
 use std::fmt::{Display, Formatter};
-use std::fs::File;
-use std::io::{BufRead, BufReader, Lines};
-use std::ops::Not;
 use std::path::PathBuf;
 
 #[derive(Debug)]
@@ -100,24 +97,18 @@ impl Display for SearchSummary {
     }
 }
 
-pub type InputLines = Lines<BufReader<File>>;
-
-pub fn read_input_lines(path: &PathBuf) -> Result<InputLines, Box<dyn Error>> {
-    let file = File::open(path)?;
-
-    Ok(BufReader::new(file).lines())
-}
-
 pub fn search(
-    pattern: impl AsRef<str>,
+    pattern: String,
     path: impl Into<PathBuf>,
-    _config: &SearchConfig,
+    config: &SearchConfig,
 ) -> Result<Vec<SearchSummary>, Box<dyn Error>> {
-    let matcher = Regex::new(pattern.as_ref())?;
     let path = path.into();
 
     if path.is_file() {
-        Ok(search_file(&path, &matcher)?
+        let single_file_searcher = SingleFileSearcher::new(path, config);
+
+        Ok(single_file_searcher
+            .search(&pattern)?
             .map(|ss| vec![ss])
             .unwrap_or_default())
     } else {
@@ -127,7 +118,8 @@ pub fn search(
             .map(|dir| dir.unwrap().into_path())
             .filter_map(|entry_path| {
                 if entry_path.is_file() {
-                    search_file(&entry_path, &matcher).ok().flatten() // FIXME
+                    let single_file_searcher = SingleFileSearcher::new(entry_path, config);
+                    single_file_searcher.search(&pattern).ok().flatten() // FIXME
                 } else {
                     None
                 }
@@ -136,37 +128,6 @@ pub fn search(
 
         Ok(summaries)
     }
-}
-
-fn search_file(path: &PathBuf, matcher: &Regex) -> Result<Option<SearchSummary>, Box<dyn Error>> {
-    let mut search_summary = SearchSummary::new(path.display());
-    let lines = read_input_lines(path)?;
-
-    for (line_number, line) in lines.enumerate() {
-        let line = line?;
-
-        let matching_indices = matcher
-            .find_iter(&line)
-            .map(|mat| PatternIndices {
-                start: mat.start(),
-                end: mat.end(),
-            })
-            .collect_vec();
-
-        if !matching_indices.is_empty() {
-            search_summary.add_line_data(MatchingLineData {
-                line_number: line_number + 1,
-                line,
-                matching_pattern_idx: matching_indices,
-            });
-        }
-    }
-
-    Ok(search_summary
-        .lines_matching
-        .is_empty()
-        .not()
-        .then(|| search_summary))
 }
 
 pub fn is_stdin_piped() -> bool {

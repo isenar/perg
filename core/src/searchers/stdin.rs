@@ -21,8 +21,8 @@ impl<'conf> StdinSearcher<'conf> {
 impl<'conf> Searcher for StdinSearcher<'conf> {
     type Output = Result<Vec<SearchSummary>, Box<dyn Error>>;
 
-    fn search(&self, pattern: String) -> Self::Output {
-        let matcher = Regex::new(&pattern)?;
+    fn search(&self, pattern: &str) -> Self::Output {
+        let matcher = Regex::new(pattern)?;
         let mut search_summary = SearchSummary::new("<stdin>");
         let lines = std::io::stdin().lock().lines();
 

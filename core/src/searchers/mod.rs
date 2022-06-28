@@ -1,11 +1,11 @@
 mod file;
 mod stdin;
 
-pub use file::FileSearcher;
+pub use file::SingleFileSearcher;
 pub use stdin::StdinSearcher;
 
 pub trait Searcher {
     type Output;
 
-    fn search(&self, pattern: String) -> Self::Output;
+    fn search(&self, pattern: &str) -> Self::Output;
 }

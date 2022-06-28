@@ -3,7 +3,7 @@ mod args;
 use args::Args;
 
 use perg::config::{Config, OutputConfig, SearchConfig};
-use perg::printer::Printer;
+use perg::output::Printer;
 use perg::{is_stdin_piped, search};
 
 use clap::Parser;
@@ -31,9 +31,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let search_results = if is_stdin_piped() {
         let stdin_searcher = StdinSearcher::new(&config.search);
-        stdin_searcher.search(config.pattern)?
+        stdin_searcher.search(&config.pattern)?
     } else {
-        search(&config.pattern, &config.path, &config.search)?
+        search(config.pattern, &config.path, &config.search)?
     };
 
     let printer = Printer::new(&config.output);
