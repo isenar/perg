@@ -10,6 +10,10 @@ pub struct Args {
     /// When provided, this overrides the -g (glob) arg.
     pub path: Option<PathBuf>,
 
+    #[clap(short = 'l')]
+    /// Print only the names of the files matching the provided criteria.
+    pub files_with_matches: bool,
+
     #[clap(short = 'i')]
     /// Matches case insensitively
     pub ignore_case: bool,
