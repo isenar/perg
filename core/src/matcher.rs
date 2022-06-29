@@ -2,15 +2,23 @@ use crate::config::SearchConfig;
 use crate::summary::PatternIndices;
 use crate::Result;
 use regex::{Regex, RegexBuilder};
+use std::borrow::Cow;
 
 #[derive(Debug)]
 pub struct Matcher(Regex);
 
 impl Matcher {
     pub fn build(pattern: &str, config: &SearchConfig) -> Result<Self> {
-        let regex = RegexBuilder::new(pattern)
+        let pattern = if config.exact_match {
+            Cow::from(format!("\\b{pattern}\\b"))
+        } else {
+            Cow::from(pattern)
+        };
+
+        let regex = RegexBuilder::new(&pattern)
             .case_insensitive(config.case_insensitive)
-            .build()?;
+            .build()
+            .map_err(|e| crate::Error::BadRegex(e, pattern.to_string()))?;
 
         Ok(Self(regex))
     }
@@ -44,10 +52,11 @@ mod tests {
 
     #[test]
     fn fails_on_bad_regex_pattern() {
+        let invalid_pattern = "[";
         let config = SearchConfig::default();
-        let matcher = Matcher::build("[", &config);
+        let matcher = Matcher::build(invalid_pattern, &config);
 
-        assert_matches!(matcher, Err(crate::Error::BadRegex(_)));
+        assert_matches!(matcher, Err(crate::Error::BadRegex(_, pattern)) if pattern == invalid_pattern);
     }
 
     #[test_case("foo", "foo bar", vec![(0, 3)])]

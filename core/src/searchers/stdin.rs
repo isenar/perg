@@ -28,11 +28,11 @@ impl<'conf> Searcher for StdinSearcher<'conf> {
 
             if !matching_indices.is_empty() {
                 search_summary.add_line_data(
-                    "<stdin>".to_string(),
+                    "<stdin>",
                     MatchingLineData {
                         line_number: None,
                         line,
-                        matching_pattern_idx: matching_indices,
+                        matches_idxs: matching_indices,
                     },
                 );
             }

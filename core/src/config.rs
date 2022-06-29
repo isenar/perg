@@ -13,6 +13,7 @@ pub struct SearchConfig {
     pub case_insensitive: bool,
     pub invert_match: bool,
     pub follow_symlinks: bool,
+    pub exact_match: bool,
 }
 
 #[derive(Debug)]

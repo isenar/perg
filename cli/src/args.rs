@@ -25,6 +25,9 @@ pub struct Args {
     #[clap(short = 'S')]
     pub follow_symlinks: bool,
 
+    #[clap(short = 'w')]
+    pub whole_words: bool,
+
     #[clap(short = 'g')]
     /// Only include the files matching the provided GLOB pattern
     pub glob: Option<String>,
