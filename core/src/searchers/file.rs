@@ -1,11 +1,12 @@
+use crate::config::SearchConfig;
 use crate::searchers::Searcher;
-use crate::{MatchingLineData, PatternIndices, SearchConfig, SearchSummary};
+use crate::summary::{MatchingLineData, PatternIndices, SearchSummary};
+use crate::Result;
 use itertools::Itertools;
 use regex::Regex;
-use std::error::Error;
+
 use std::fs::File;
 use std::io::{BufRead, BufReader, Lines};
-use std::ops::Not;
 use std::path::PathBuf;
 
 #[derive(Debug)]
@@ -24,11 +25,9 @@ impl<'conf> SingleFileSearcher<'conf> {
 }
 
 impl<'conf> Searcher for SingleFileSearcher<'conf> {
-    type Output = Result<Option<SearchSummary>, Box<dyn Error>>;
-
-    fn search(&self, pattern: &str) -> Self::Output {
+    fn search(&self, pattern: &str) -> Result<SearchSummary> {
         let matcher = Regex::new(pattern)?;
-        let mut search_summary = SearchSummary::new(self.path.display());
+        let mut search_summary = SearchSummary::new();
         let lines = read_input_lines(&self.path)?;
 
         for (line_number, line) in lines.enumerate() {
@@ -43,25 +42,24 @@ impl<'conf> Searcher for SingleFileSearcher<'conf> {
                 .collect_vec();
 
             if !matching_indices.is_empty() {
-                search_summary.add_line_data(MatchingLineData {
-                    line_number: line_number + 1,
-                    line,
-                    matching_pattern_idx: matching_indices,
-                });
+                search_summary.add_line_data(
+                    self.path.to_string_lossy().to_string(),
+                    MatchingLineData {
+                        line_number: Some(line_number + 1),
+                        line,
+                        matching_pattern_idx: matching_indices,
+                    },
+                );
             }
         }
 
-        Ok(search_summary
-            .lines_matching
-            .is_empty()
-            .not()
-            .then(|| search_summary))
+        Ok(search_summary)
     }
 }
 
 type InputLines = Lines<BufReader<File>>;
 
-pub fn read_input_lines(path: &PathBuf) -> Result<InputLines, Box<dyn Error>> {
+fn read_input_lines(path: &PathBuf) -> Result<InputLines> {
     let file = File::open(path)?;
 
     Ok(BufReader::new(file).lines())

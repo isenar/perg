@@ -1,5 +1,5 @@
 use crate::config::OutputConfig;
-use crate::SearchSummary;
+use crate::summary::SearchSummary;
 
 pub struct Printer<'conf> {
     _config: &'conf OutputConfig,
@@ -12,9 +12,7 @@ impl<'conf> Printer<'conf> {
         }
     }
 
-    pub fn print(&self, summaries: impl Iterator<Item = &'conf SearchSummary>) {
-        for summary in summaries {
-            println!("{summary}");
-        }
+    pub fn print(&self, summary: SearchSummary) {
+        println!("{summary}");
     }
 }

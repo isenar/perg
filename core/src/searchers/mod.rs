@@ -1,11 +1,14 @@
 mod file;
+mod recursive;
 mod stdin;
 
 pub use file::SingleFileSearcher;
+pub use recursive::RecursiveSearcher;
 pub use stdin::StdinSearcher;
 
-pub trait Searcher {
-    type Output;
+use crate::summary::SearchSummary;
+use crate::Result;
 
-    fn search(&self, pattern: &str) -> Self::Output;
+pub trait Searcher {
+    fn search(&self, pattern: &str) -> Result<SearchSummary>;
 }

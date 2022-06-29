@@ -1,13 +1,11 @@
 mod args;
 
 use args::Args;
-
-use perg::config::{Config, OutputConfig, SearchConfig};
-use perg::output::Printer;
-use perg::{is_stdin_piped, search};
-
 use clap::Parser;
-use perg::searchers::{Searcher, StdinSearcher};
+use perg::config::{Config, OutputConfig, SearchConfig};
+use perg::is_stdin_piped;
+use perg::output::Printer;
+use perg::searchers::{RecursiveSearcher, Searcher, SingleFileSearcher, StdinSearcher};
 
 impl From<Args> for Config {
     fn from(args: Args) -> Self {
@@ -25,20 +23,24 @@ impl From<Args> for Config {
     }
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> perg::Result<()> {
     let args: Args = Args::parse();
     let config = Config::from(args);
-
-    let search_results = if is_stdin_piped() {
-        let stdin_searcher = StdinSearcher::new(&config.search);
-        stdin_searcher.search(&config.pattern)?
-    } else {
-        search(config.pattern, &config.path, &config.search)?
-    };
-
+    let searcher = select_searcher(&config);
+    let search_results = searcher.search(&config.pattern)?;
     let printer = Printer::new(&config.output);
 
-    printer.print(search_results.iter());
+    printer.print(search_results);
 
     Ok(())
+}
+
+fn select_searcher(config: &Config) -> Box<dyn Searcher + '_> {
+    if is_stdin_piped() {
+        Box::new(StdinSearcher::new(&config.search))
+    } else if config.path.is_file() {
+        Box::new(SingleFileSearcher::new(config.path.clone(), &config.search))
+    } else {
+        Box::new(RecursiveSearcher::new(config.path.clone(), &config.search))
+    }
 }
