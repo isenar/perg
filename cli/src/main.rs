@@ -18,6 +18,7 @@ impl TryFrom<Args> for Config {
             search: SearchConfig {
                 case_insensitive: args.ignore_case,
                 invert_match: args.invert_match,
+                follow_symlinks: args.follow_symlinks,
             },
             output: OutputConfig {
                 only_file_names: args.files_with_matches,
@@ -34,7 +35,7 @@ fn main() -> perg::Result<()> {
     let search_results = searcher.search(&matcher)?;
     let printer = Printer::new(&config.output);
 
-    printer.print(search_results);
+    printer.print(search_results, &mut std::io::stdout())?;
 
     Ok(())
 }

@@ -24,7 +24,6 @@ impl<'conf> Searcher for StdinSearcher<'conf> {
 
         for line in lines {
             let line = line?;
-
             let matching_indices = matcher.find_matches(&line);
 
             if !matching_indices.is_empty() {

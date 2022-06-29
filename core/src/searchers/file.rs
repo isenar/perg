@@ -11,21 +11,23 @@ use std::path::PathBuf;
 #[derive(Debug)]
 pub struct SingleFileSearcher<'conf> {
     path: PathBuf,
-    _config: &'conf SearchConfig,
+    config: &'conf SearchConfig,
 }
 
 impl<'conf> SingleFileSearcher<'conf> {
     pub fn new(path: PathBuf, config: &'conf SearchConfig) -> Self {
-        Self {
-            path,
-            _config: config,
-        }
+        Self { path, config }
     }
 }
 
 impl<'conf> Searcher for SingleFileSearcher<'conf> {
     fn search(&self, matcher: &Matcher) -> Result<SearchSummary> {
         let mut search_summary = SearchSummary::new();
+
+        if self.path.is_symlink() && !self.config.follow_symlinks {
+            return Ok(search_summary);
+        }
+
         let lines = read_input_lines(&self.path)?;
 
         for (line_number, line) in lines.enumerate() {

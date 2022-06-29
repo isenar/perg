@@ -32,7 +32,7 @@ impl Display for MatchingLineData {
 }
 
 #[derive(Debug, Default)]
-pub struct SearchSummary(BTreeMap<String, Vec<MatchingLineData>>);
+pub struct SearchSummary(pub BTreeMap<String, Vec<MatchingLineData>>);
 
 impl SearchSummary {
     pub fn new() -> Self {
@@ -48,18 +48,11 @@ impl SearchSummary {
     }
 }
 
-impl Display for SearchSummary {
-    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        for (file, line_data) in &self.0 {
-            writeln!(f, "{file}")?;
+impl IntoIterator for SearchSummary {
+    type Item = (String, Vec<MatchingLineData>);
+    type IntoIter = std::collections::btree_map::IntoIter<String, Vec<MatchingLineData>>;
 
-            for line in line_data {
-                writeln!(f, "{line}")?;
-            }
-
-            writeln!(f)?;
-        }
-
-        Ok(())
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
     }
 }

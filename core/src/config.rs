@@ -12,6 +12,7 @@ pub struct Config {
 pub struct SearchConfig {
     pub case_insensitive: bool,
     pub invert_match: bool,
+    pub follow_symlinks: bool,
 }
 
 #[derive(Debug)]
