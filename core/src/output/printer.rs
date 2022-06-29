@@ -14,7 +14,7 @@ impl<'conf> Printer<'conf> {
         }
     }
 
-    /// Write `summary` to stdout
+    /// Write `summary` to stdout in a ag (silver-searcher) format and color scheme
     pub fn print(&self, summary: SearchSummary) {
         if self.config.only_file_names {
             for file in summary.files() {

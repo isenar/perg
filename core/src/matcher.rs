@@ -1,14 +1,17 @@
 use crate::config::SearchConfig;
-use crate::summary::PatternIndices;
+use crate::summary::MatchIndices;
 use crate::Result;
 use regex::{Regex, RegexBuilder};
 use std::borrow::Cow;
 
+/// A matcher that is used to find
 #[derive(Debug)]
 pub struct Matcher(Regex);
 
 impl Matcher {
-    pub fn build(pattern: &str, config: &SearchConfig) -> Result<Self> {
+    /// Create a matcher based on provided `SearchConfig`.
+    /// Creation will fail if `pattern` is an invalid regex.
+    pub fn try_create(pattern: &str, config: &SearchConfig) -> Result<Self> {
         let pattern = if config.exact_match {
             Cow::from(format!("\\b{pattern}\\b"))
         } else {
@@ -23,10 +26,11 @@ impl Matcher {
         Ok(Self(regex))
     }
 
-    pub fn find_matches(&self, line: &str) -> Vec<PatternIndices> {
+    /// Find all the indices (start, end) of the words matching the pattern within `line`.
+    pub fn find_matches(&self, line: &str) -> Vec<MatchIndices> {
         self.0
             .find_iter(line)
-            .map(|mat| PatternIndices {
+            .map(|mat| MatchIndices {
                 start: mat.start(),
                 end: mat.end(),
             })
@@ -44,17 +48,24 @@ mod tests {
         pattern: &str,
         line: &str,
         search_config: &SearchConfig,
-    ) -> Vec<PatternIndices> {
-        Matcher::build(pattern, search_config)
+    ) -> Vec<MatchIndices> {
+        Matcher::try_create(pattern, search_config)
             .expect("Failed to build matcher")
             .find_matches(line)
+    }
+
+    fn expected_indices(expected: Vec<(usize, usize)>) -> Vec<MatchIndices> {
+        expected
+            .into_iter()
+            .map(|(start, end)| MatchIndices { start, end })
+            .collect()
     }
 
     #[test]
     fn fails_on_bad_regex_pattern() {
         let invalid_pattern = "[";
         let config = SearchConfig::default();
-        let matcher = Matcher::build(invalid_pattern, &config);
+        let matcher = Matcher::try_create(invalid_pattern, &config);
 
         assert_matches!(matcher, Err(crate::Error::BadRegex(_, pattern)) if pattern == invalid_pattern);
     }
@@ -69,28 +80,33 @@ mod tests {
     fn find_matches_case_sensitive(pattern: &str, line: &str, expected: Vec<(usize, usize)>) {
         let search_config = SearchConfig::default();
         let matches_found = find_matching_indices(pattern, line, &search_config);
-
-        let expected: Vec<_> = expected
-            .into_iter()
-            .map(|(start, end)| PatternIndices { start, end })
-            .collect();
+        let expected = expected_indices(expected);
 
         assert_eq!(matches_found, expected)
     }
 
     #[test_case("FoO", "foo bar", vec![(0, 3)])]
-    #[test_case("hello", "Hello world and hello Rust", vec![(0,5), (16, 21)])]
+    #[test_case("hello", "Hello world and hello Rust", vec![(0, 5), (16, 21)])]
     fn find_matches_case_insensitive(pattern: &str, line: &str, expected: Vec<(usize, usize)>) {
         let search_config = SearchConfig {
             case_insensitive: true,
             ..Default::default()
         };
         let matches_found = find_matching_indices(pattern, line, &search_config);
+        let expected = expected_indices(expected);
 
-        let expected: Vec<_> = expected
-            .into_iter()
-            .map(|(start, end)| PatternIndices { start, end })
-            .collect();
+        assert_eq!(matches_found, expected)
+    }
+
+    #[test_case("foo", "simple foo", vec![(7, 10)])]
+    #[test_case("foo", "foo but not this fooo", vec![(0,3)])]
+    fn find_matches_whole_words(pattern: &str, line: &str, expected: Vec<(usize, usize)>) {
+        let search_config = SearchConfig {
+            exact_match: true,
+            ..Default::default()
+        };
+        let matches_found = find_matching_indices(pattern, line, &search_config);
+        let expected = expected_indices(expected);
 
         assert_eq!(matches_found, expected)
     }

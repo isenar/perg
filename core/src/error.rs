@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
     #[error("Bad regex for pattern '{1}': {0}")]
@@ -6,6 +8,6 @@ pub enum Error {
     #[error("WalkDir error: {0}")]
     WalkDir(#[from] walkdir::Error),
 
-    #[error("io error: {0}")]
-    Io(#[from] std::io::Error),
+    #[error("IO error occurred for file {0}: {1}")]
+    Io(PathBuf, std::io::Error),
 }

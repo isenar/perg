@@ -1,39 +1,36 @@
-use crate::config::SearchConfig;
 use crate::matcher::Matcher;
 use crate::searchers::Searcher;
-use crate::summary::{MatchingLineData, SearchSummary};
-use crate::Result;
+use crate::summary::{MatchedLine, SearchSummary};
+use crate::{skip_fail, Result};
 
 use std::io::BufRead;
-use vec1::Vec1;
 
-#[derive(Debug)]
-pub struct StdinSearcher<'conf> {
-    _config: &'conf SearchConfig,
-}
+#[derive(Debug, Default)]
+pub struct StdinSearcher;
 
-impl<'conf> StdinSearcher<'conf> {
-    pub fn new(config: &'conf SearchConfig) -> Self {
-        Self { _config: config }
+impl StdinSearcher {
+    pub fn new() -> Self {
+        Self
     }
 }
 
-impl<'conf> Searcher for StdinSearcher<'conf> {
+impl Searcher for StdinSearcher {
     fn search(&self, matcher: &Matcher) -> Result<SearchSummary> {
         let mut search_summary = SearchSummary::new();
         let lines = std::io::stdin().lock().lines();
 
         for line in lines {
-            let line = line?;
+            // skip lines containing non-UTF8 characters (like binary data)
+            let line = skip_fail!(line);
             let matching_indices = matcher.find_matches(&line);
 
             if !matching_indices.is_empty() {
                 search_summary.add_line_data(
                     "<stdin>",
-                    MatchingLineData {
+                    MatchedLine {
                         line_number: None,
                         line,
-                        matches_idxs: Vec1::try_from_vec(matching_indices).unwrap(), // FIXME,
+                        matches_indicies: matching_indices,
                     },
                 );
             }
