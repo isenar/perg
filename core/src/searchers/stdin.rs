@@ -1,10 +1,9 @@
+use crate::config::SearchConfig;
+use crate::matcher::Matcher;
 use crate::searchers::Searcher;
-use crate::{MatchingLineData, PatternIndices, SearchConfig, SearchSummary};
+use crate::summary::{MatchingLineData, SearchSummary};
+use crate::Result;
 
-use itertools::Itertools;
-use regex::Regex;
-
-use std::error::Error;
 use std::io::BufRead;
 
 #[derive(Debug)]
@@ -19,33 +18,26 @@ impl<'conf> StdinSearcher<'conf> {
 }
 
 impl<'conf> Searcher for StdinSearcher<'conf> {
-    type Output = Result<Vec<SearchSummary>, Box<dyn Error>>;
-
-    fn search(&self, pattern: String) -> Self::Output {
-        let matcher = Regex::new(&pattern)?;
-        let mut search_summary = SearchSummary::new("<stdin>");
+    fn search(&self, matcher: &Matcher) -> Result<SearchSummary> {
+        let mut search_summary = SearchSummary::new();
         let lines = std::io::stdin().lock().lines();
 
         for line in lines {
             let line = line?;
-
-            let matching_indices = matcher
-                .find_iter(&line)
-                .map(|mat| PatternIndices {
-                    start: mat.start(),
-                    end: mat.end(),
-                })
-                .collect_vec();
+            let matching_indices = matcher.find_matches(&line);
 
             if !matching_indices.is_empty() {
-                search_summary.add_line_data(MatchingLineData {
-                    line_number: 0,
-                    line,
-                    matching_pattern_idx: matching_indices,
-                });
+                search_summary.add_line_data(
+                    "<stdin>",
+                    MatchingLineData {
+                        line_number: None,
+                        line,
+                        matches_idxs: matching_indices,
+                    },
+                );
             }
         }
 
-        Ok(vec![search_summary])
+        Ok(search_summary)
     }
 }

@@ -22,6 +22,12 @@ pub struct Args {
     /// Inverts matching criteria. Shows lines that do not match provided patterns.
     pub invert_match: bool,
 
+    #[clap(short = 'S')]
+    pub follow_symlinks: bool,
+
+    #[clap(short = 'w')]
+    pub whole_words: bool,
+
     #[clap(short = 'g')]
     /// Only include the files matching the provided GLOB pattern
     pub glob: Option<String>,
