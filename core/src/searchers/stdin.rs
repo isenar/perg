@@ -5,6 +5,7 @@ use crate::summary::{MatchingLineData, SearchSummary};
 use crate::Result;
 
 use std::io::BufRead;
+use vec1::Vec1;
 
 #[derive(Debug)]
 pub struct StdinSearcher<'conf> {
@@ -32,7 +33,7 @@ impl<'conf> Searcher for StdinSearcher<'conf> {
                     MatchingLineData {
                         line_number: None,
                         line,
-                        matches_idxs: matching_indices,
+                        matches_idxs: Vec1::try_from_vec(matching_indices).unwrap(), // FIXME,
                     },
                 );
             }

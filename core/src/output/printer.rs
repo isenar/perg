@@ -1,8 +1,7 @@
 use crate::config::OutputConfig;
 use crate::summary::SearchSummary;
-use crate::Result;
 
-use std::io::Write;
+use colored::Colorize;
 
 pub struct Printer<'conf> {
     config: &'conf OutputConfig,
@@ -15,23 +14,22 @@ impl<'conf> Printer<'conf> {
         }
     }
 
-    pub fn print(&self, summary: SearchSummary, writer: &mut impl Write) -> Result<()> {
+    /// Write `summary` to stdout
+    pub fn print(&self, summary: SearchSummary) {
         if self.config.only_file_names {
-            for (file, _) in summary {
-                writeln!(writer, "{file}")?;
+            for file in summary.files() {
+                println!("{}", file.bright_green());
             }
         } else {
             for (file, line_data) in summary {
-                writeln!(writer, "{file}")?;
+                println!("{}", file.bright_green());
 
                 for line in line_data {
-                    writeln!(writer, "{line}")?;
+                    println!("{line}");
                 }
 
-                writeln!(writer)?;
+                println!();
             }
         }
-
-        Ok(())
     }
 }

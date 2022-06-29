@@ -1,12 +1,15 @@
+use colored::Colorize;
+
 use std::collections::BTreeMap;
 use std::fmt::{Display, Formatter};
+use vec1::Vec1;
 
 #[derive(Debug)]
 #[cfg_attr(test, derive(PartialEq))]
 pub struct MatchingLineData {
     pub line_number: Option<usize>,
     pub line: String,
-    pub matches_idxs: Vec<PatternIndices>,
+    pub matches_idxs: Vec1<PatternIndices>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -23,9 +26,11 @@ impl Display for MatchingLineData {
         let line_num = self
             .line_number
             .map(|num| format!("{num}:"))
-            .unwrap_or_default();
+            .unwrap_or_default()
+            .bold()
+            .yellow();
         let before = &self.line[0..start];
-        let colored_match = &self.line[start..end];
+        let colored_match = &self.line[start..end].black().on_bright_yellow();
         let after = &self.line[end..];
 
         write!(f, "{line_num}{before}{colored_match}{after}")
@@ -53,6 +58,10 @@ impl SearchSummary {
 
     pub fn merge(&mut self, other: Self) {
         self.0.extend(other.0);
+    }
+
+    pub fn files(&self) -> impl Iterator<Item = &str> {
+        self.0.keys().map(|s| s as &str)
     }
 }
 
