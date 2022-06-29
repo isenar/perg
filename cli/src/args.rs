@@ -8,7 +8,7 @@ pub struct Args {
     /// A regular expression used for the search.
     pub pattern: String,
     /// A path to a file or directory to search for.
-    /// If none is given, perg will search for the `pattern` recursively in current directory
+    /// If none is given, perg will search for the <PATTERN> recursively in current directory
     pub path: Option<PathBuf>,
 
     #[clap(short = 'l')]

@@ -1,6 +1,6 @@
 use colored::Colorize;
 
-use std::collections::BTreeMap;
+use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug)]
@@ -32,7 +32,7 @@ impl Display for MatchedLine {
 
 #[derive(Debug, Default)]
 #[cfg_attr(test, derive(PartialEq))]
-pub struct SearchSummary(BTreeMap<String, Vec<MatchedLine>>);
+pub struct SearchSummary(HashMap<String, Vec<MatchedLine>>);
 
 impl SearchSummary {
     pub fn new() -> Self {
@@ -49,20 +49,15 @@ impl SearchSummary {
 
     /// Return an iterator over file names
     pub fn files(&self) -> impl Iterator<Item = &str> {
-        self.0.keys().map(|s| s as &str)
+        self.0.keys().map(|s| s.as_ref())
+    }
+
+    pub fn into_iter(self) -> impl Iterator<Item = (String, Vec<MatchedLine>)> {
+        self.0.into_iter()
     }
 
     #[cfg(test)]
-    pub fn from_map(map: BTreeMap<String, Vec<MatchedLine>>) -> Self {
+    pub fn from_map(map: HashMap<String, Vec<MatchedLine>>) -> Self {
         Self(map)
-    }
-}
-
-impl IntoIterator for SearchSummary {
-    type Item = (String, Vec<MatchedLine>);
-    type IntoIter = std::collections::btree_map::IntoIter<String, Vec<MatchedLine>>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.0.into_iter()
     }
 }

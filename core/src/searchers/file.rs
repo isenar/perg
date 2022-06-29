@@ -62,19 +62,19 @@ fn read_lines(path: impl AsRef<Path>) -> Result<Lines<BufReader<File>>> {
 mod tests {
     use super::*;
     use crate::summary::MatchIndices;
-    use maplit::btreemap;
+    use maplit::hashmap;
 
     fn expected_summary(file: &str) -> SearchSummary {
-        SearchSummary::from_map(btreemap! {
+        SearchSummary::from_map(hashmap! {
             file.to_owned() => vec![
                 MatchedLine {
                     line_number: Some(1),
-                    line: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.".to_string(),
+                    line: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.".to_owned(),
                     matches_indicies: vec![MatchIndices { start: 12, end: 17 }],
                 },
                 MatchedLine {
                     line_number: Some(2),
-                    line: "Aenean commodo ligula eget dolor.".to_string(),
+                    line: "Aenean commodo ligula eget dolor.".to_owned(),
                     matches_indicies: vec![MatchIndices { start: 27, end: 32 }],
                 },
             ]
