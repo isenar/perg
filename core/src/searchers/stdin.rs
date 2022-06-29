@@ -1,9 +1,8 @@
 use crate::config::SearchConfig;
+use crate::matcher::Matcher;
 use crate::searchers::Searcher;
-use crate::summary::{MatchingLineData, PatternIndices, SearchSummary};
+use crate::summary::{MatchingLineData, SearchSummary};
 use crate::Result;
-use itertools::Itertools;
-use regex::Regex;
 
 use std::io::BufRead;
 
@@ -19,21 +18,14 @@ impl<'conf> StdinSearcher<'conf> {
 }
 
 impl<'conf> Searcher for StdinSearcher<'conf> {
-    fn search(&self, pattern: &str) -> Result<SearchSummary> {
-        let matcher = Regex::new(pattern)?;
+    fn search(&self, matcher: &Matcher) -> Result<SearchSummary> {
         let mut search_summary = SearchSummary::new();
         let lines = std::io::stdin().lock().lines();
 
         for line in lines {
             let line = line?;
 
-            let matching_indices = matcher
-                .find_iter(&line)
-                .map(|mat| PatternIndices {
-                    start: mat.start(),
-                    end: mat.end(),
-                })
-                .collect_vec();
+            let matching_indices = matcher.find_matches(&line);
 
             if !matching_indices.is_empty() {
                 search_summary.add_line_data(

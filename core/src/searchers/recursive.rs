@@ -1,4 +1,5 @@
 use crate::config::SearchConfig;
+use crate::matcher::Matcher;
 use crate::searchers::{Searcher, SingleFileSearcher};
 use crate::summary::SearchSummary;
 use crate::Result;
@@ -18,7 +19,7 @@ impl<'conf> RecursiveSearcher<'conf> {
 }
 
 impl<'conf> Searcher for RecursiveSearcher<'conf> {
-    fn search(&self, pattern: &str) -> Result<SearchSummary> {
+    fn search(&self, pattern: &Matcher) -> Result<SearchSummary> {
         let mut summary = SearchSummary::new();
 
         for entry in walkdir::WalkDir::new(&self.path) {

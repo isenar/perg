@@ -2,6 +2,7 @@ use crate::error::Error;
 
 pub mod config;
 pub mod error;
+pub mod matcher;
 pub mod output;
 pub mod searchers;
 mod summary;

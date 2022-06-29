@@ -8,7 +8,7 @@ pub struct MatchingLineData {
     pub matching_pattern_idx: Vec<PatternIndices>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct PatternIndices {
     pub start: usize,
     pub end: usize,
@@ -51,12 +51,13 @@ impl SearchSummary {
 impl Display for SearchSummary {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         for (file, line_data) in &self.0 {
-            write!(f, "{file}")?;
+            writeln!(f, "{file}")?;
 
             for line in line_data {
-                writeln!(f)?;
-                write!(f, "{line}")?;
+                writeln!(f, "{line}")?;
             }
+
+            writeln!(f)?;
         }
 
         Ok(())

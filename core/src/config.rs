@@ -8,7 +8,7 @@ pub struct Config {
     pub output: OutputConfig,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct SearchConfig {
     pub case_insensitive: bool,
     pub invert_match: bool,

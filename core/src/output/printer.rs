@@ -13,6 +13,6 @@ impl<'conf> Printer<'conf> {
     }
 
     pub fn print(&self, summary: SearchSummary) {
-        println!("{summary}");
+        print!("{summary}");
     }
 }
