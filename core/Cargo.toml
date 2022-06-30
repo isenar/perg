@@ -8,11 +8,11 @@ edition = "2021"
 [dependencies]
 atty = "0.2.14"
 colored = "2.0.0"
+maplit = "1.0.2"
 regex = "1.5.6"
 thiserror = "1.0.31"
 walkdir = "2.3.2"
 
 [dev-dependencies]
 assert_matches = "1.5.0"
-maplit = "1.0.2"
 test-case = "2.1.0"

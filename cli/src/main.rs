@@ -4,7 +4,7 @@ use args::Args;
 use clap::Parser;
 use perg::config::Config;
 use perg::matcher::Matcher;
-use perg::output::Printer;
+use perg::printer::Printer;
 use perg::searchers::{RecursiveSearcher, Searcher, SingleFileSearcher, StdinSearcher};
 use perg::utils::is_stdin_piped;
 

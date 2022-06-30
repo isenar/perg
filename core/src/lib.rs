@@ -3,7 +3,7 @@ use crate::error::Error;
 pub mod config;
 pub mod error;
 pub mod matcher;
-pub mod output;
+pub mod printer;
 pub mod searchers;
 pub mod summary;
 pub mod utils;

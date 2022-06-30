@@ -21,7 +21,7 @@ impl<'conf> Printer<'conf> {
                 println!("{}", file.bright_green());
             }
         } else {
-            for (file, line_data) in summary.into_iter() {
+            for (file, line_data) in summary {
                 println!("{}", file.bright_green());
 
                 for line in line_data {

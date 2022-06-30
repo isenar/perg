@@ -7,9 +7,37 @@ pub use recursive::RecursiveSearcher;
 pub use stdin::StdinSearcher;
 
 use crate::matcher::Matcher;
-use crate::summary::SearchSummary;
+use crate::summary::{MatchedLine, SearchSummary};
 use crate::Result;
+
+use std::ops::Not;
 
 pub trait Searcher {
     fn search(&self, matcher: &Matcher) -> Result<SearchSummary>;
+}
+
+pub(crate) fn summarize(
+    matcher: &Matcher,
+    path: impl AsRef<str>,
+    lines: impl IntoIterator<Item = String>,
+) -> SearchSummary {
+    let matching_lines: Vec<_> = lines
+        .into_iter()
+        .enumerate()
+        .filter_map(|(line_num, line)| {
+            let matches_indices = matcher.find_matches(&line);
+
+            matches_indices.is_empty().not().then(|| MatchedLine {
+                line_number: line_num + 1,
+                line,
+                matches_indices,
+            })
+        })
+        .collect();
+
+    if matching_lines.is_empty() {
+        SearchSummary::empty()
+    } else {
+        SearchSummary::new(path.as_ref().to_owned(), matching_lines)
+    }
 }
