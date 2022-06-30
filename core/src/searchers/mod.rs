@@ -18,7 +18,7 @@ pub trait Searcher {
 
 pub(crate) fn summarize(
     matcher: &Matcher,
-    path: impl AsRef<str>,
+    file_path: impl Into<String>,
     lines: impl IntoIterator<Item = String>,
 ) -> SearchSummary {
     let matching_lines: Vec<_> = lines
@@ -38,6 +38,6 @@ pub(crate) fn summarize(
     if matching_lines.is_empty() {
         SearchSummary::empty()
     } else {
-        SearchSummary::new(path.as_ref().to_owned(), matching_lines)
+        SearchSummary::new(file_path.into(), matching_lines)
     }
 }

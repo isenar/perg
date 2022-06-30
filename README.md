@@ -39,12 +39,12 @@ $ perg  "\d{4}"
 `perg` also can detect whether it should handle data from stdin when piped to.
 For example, this command:
 ```bash
-$ echo "Hello world\nhello" | perg -i hello # case insensitive
+$ echo "Hello world\n\nhello" | perg -i hello # case insensitive
 ```
 will output:
 ```bash
 <stdin>
-Hello world
-hello
+1:Hello world
+3:hello
 ```
 
