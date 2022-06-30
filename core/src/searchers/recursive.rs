@@ -20,7 +20,7 @@ impl<'conf> RecursiveSearcher<'conf> {
 
 impl<'conf> Searcher for RecursiveSearcher<'conf> {
     fn search(&self, pattern: &Matcher) -> Result<SearchSummary> {
-        let mut summary = SearchSummary::new();
+        let mut summary = SearchSummary::empty();
 
         for entry in walkdir::WalkDir::new(&self.path) {
             let path = entry?.into_path();

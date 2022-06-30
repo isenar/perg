@@ -1,12 +1,11 @@
 use crate::config::SearchConfig;
 use crate::matcher::Matcher;
-use crate::searchers::Searcher;
-use crate::summary::{MatchingLineData, SearchSummary};
+use crate::searchers::{summarize, Searcher};
+use crate::summary::SearchSummary;
+use crate::utils::read_lines;
 use crate::Result;
 
-use std::fs::File;
-use std::io::{BufRead, BufReader, Lines};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 #[derive(Debug)]
 pub struct SingleFileSearcher<'conf> {
@@ -22,64 +21,77 @@ impl<'conf> SingleFileSearcher<'conf> {
 
 impl<'conf> Searcher for SingleFileSearcher<'conf> {
     fn search(&self, matcher: &Matcher) -> Result<SearchSummary> {
-        let mut search_summary = SearchSummary::new();
-
+        // skip handling symlinks if the flag is disabled
         if self.path.is_symlink() && !self.config.follow_symlinks {
-            return Ok(search_summary);
+            return Ok(SearchSummary::empty());
         }
 
-        let lines = read_input_lines(&self.path)?;
-
-        for (line_number, line) in lines.enumerate() {
-            let line = line?;
-
-            let matching_indices = matcher.find_matches(&line);
-
-            if !matching_indices.is_empty() {
-                search_summary.add_line_data(
-                    self.path.to_str().unwrap(), // FIXME
-                    MatchingLineData {
-                        line_number: Some(line_number + 1),
-                        line,
-                        matches_idxs: matching_indices,
-                    },
-                );
-            }
-        }
+        let lines = read_lines(&self.path)?.filter_map(|line| line.ok());
+        let path = self.path.to_string_lossy();
+        let search_summary = summarize(matcher, path, lines);
 
         Ok(search_summary)
     }
 }
 
-type InputLines = Lines<BufReader<File>>;
-
-fn read_input_lines(path: impl AsRef<Path>) -> Result<InputLines> {
-    let file = File::open(path)?;
-
-    Ok(BufReader::new(file).lines())
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::summary::PatternIndices;
+    use crate::summary::{MatchIndices, MatchedLine};
+    use maplit::hashmap;
+
+    fn expected_summary(file: &str) -> SearchSummary {
+        SearchSummary::from_map(hashmap! {
+            file.to_owned() => vec![
+                MatchedLine {
+                    line_number: 1,
+                    line: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.".to_owned(),
+                    matches_indices: vec![MatchIndices { start: 12, end: 17 }],
+                },
+                MatchedLine {
+                    line_number: 2,
+                    line: "Aenean commodo ligula eget dolor.".to_owned(),
+                    matches_indices: vec![MatchIndices { start: 27, end: 32 }],
+                },
+            ]
+        })
+    }
 
     #[test]
     fn search_in_test_data() {
         let file = "test_data/lorem.txt";
         let config = SearchConfig::default();
         let searcher = SingleFileSearcher::new(file.into(), &config);
-        let matcher = Matcher::build("in", &config).expect("Failed to build matcher");
+        let matcher = Matcher::try_create("dolor", &config).expect("Failed to build matcher");
         let search_summary = searcher.search(&matcher).expect("Searcher failed");
-        let mut expected_summary = SearchSummary::new();
-        expected_summary.add_line_data(
-            file,
-            MatchingLineData {
-                line_number: Some(1),
-                line: "Lorem ipsum dolor sit amet, consectetur adipiscing elit,".to_string(),
-                matches_idxs: vec![PatternIndices { start: 47, end: 49 }],
-            },
-        );
+        let expected_summary = expected_summary(file);
+
+        assert_eq!(search_summary, expected_summary);
+    }
+
+    #[test]
+    fn search_in_symlink_with_feature_disabled_yields_nothing() {
+        let file = "test_data/lorem_symlink";
+        let config = SearchConfig::default();
+        let searcher = SingleFileSearcher::new(file.into(), &config);
+        let matcher = Matcher::try_create("dolor", &config).expect("Failed to build matcher");
+        let search_summary = searcher.search(&matcher).expect("Searcher failed");
+        let expected_summary = SearchSummary::empty();
+
+        assert_eq!(search_summary, expected_summary);
+    }
+
+    #[test]
+    fn search_in_symlink_yields_linked_file_contents() {
+        let file = "test_data/lorem_symlink";
+        let config = SearchConfig {
+            follow_symlinks: true,
+            ..SearchConfig::default()
+        };
+        let searcher = SingleFileSearcher::new(file.into(), &config);
+        let matcher = Matcher::try_create("dolor", &config).expect("Failed to build matcher");
+        let search_summary = searcher.search(&matcher).expect("Searcher failed");
+        let expected_summary = expected_summary(file);
 
         assert_eq!(search_summary, expected_summary);
     }

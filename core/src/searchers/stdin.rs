@@ -1,42 +1,24 @@
-use crate::config::SearchConfig;
 use crate::matcher::Matcher;
-use crate::searchers::Searcher;
-use crate::summary::{MatchingLineData, SearchSummary};
+use crate::searchers::{summarize, Searcher};
+use crate::summary::SearchSummary;
 use crate::Result;
 
 use std::io::BufRead;
 
-#[derive(Debug)]
-pub struct StdinSearcher<'conf> {
-    _config: &'conf SearchConfig,
-}
+#[derive(Debug, Default)]
+pub struct StdinSearcher;
 
-impl<'conf> StdinSearcher<'conf> {
-    pub fn new(config: &'conf SearchConfig) -> Self {
-        Self { _config: config }
+impl StdinSearcher {
+    pub fn new() -> Self {
+        Self
     }
 }
 
-impl<'conf> Searcher for StdinSearcher<'conf> {
+impl Searcher for StdinSearcher {
     fn search(&self, matcher: &Matcher) -> Result<SearchSummary> {
-        let mut search_summary = SearchSummary::new();
-        let lines = std::io::stdin().lock().lines();
-
-        for line in lines {
-            let line = line?;
-            let matching_indices = matcher.find_matches(&line);
-
-            if !matching_indices.is_empty() {
-                search_summary.add_line_data(
-                    "<stdin>",
-                    MatchingLineData {
-                        line_number: None,
-                        line,
-                        matches_idxs: matching_indices,
-                    },
-                );
-            }
-        }
+        // filter out non-UTF8 lines from stdin
+        let lines = std::io::stdin().lock().lines().filter_map(|line| line.ok());
+        let search_summary = summarize(matcher, "<stdin>", lines);
 
         Ok(search_summary)
     }
