@@ -1,12 +1,12 @@
 use crate::Result;
 
 use std::fs::File;
-use std::io::{BufRead, BufReader, Lines};
+use std::io::{BufRead, BufReader, IsTerminal, Lines};
 use std::path::Path;
 
 /// Helper function to check whether perg is currently being piped to.
 pub fn is_stdin_piped() -> bool {
-    atty::isnt(atty::Stream::Stdin)
+    !std::io::stdin().is_terminal()
 }
 
 pub fn read_lines(path: impl AsRef<Path>) -> Result<Lines<BufReader<File>>> {

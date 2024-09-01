@@ -26,7 +26,7 @@ impl<'conf> Searcher for SingleFileSearcher<'conf> {
             return Ok(SearchSummary::empty());
         }
 
-        let lines = read_lines(&self.path)?.filter_map(|line| line.ok());
+        let lines = read_lines(&self.path)?.map_while(std::io::Result::ok);
         let path = self.path.to_string_lossy();
         let search_summary = summarize(matcher, path, lines);
 

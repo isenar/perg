@@ -176,7 +176,6 @@ name = "perg-core"
 version = "0.1.0"
 dependencies = [
  "assert_matches",
- "atty",
  "colored",
  "maplit",
  "regex",
