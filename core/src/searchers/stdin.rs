@@ -17,7 +17,10 @@ impl StdinSearcher {
 impl Searcher for StdinSearcher {
     fn search(&self, matcher: &Matcher) -> Result<SearchSummary> {
         // filter out non-UTF8 lines from stdin
-        let lines = std::io::stdin().lock().lines().filter_map(|line| line.ok());
+        let lines = std::io::stdin()
+            .lock()
+            .lines()
+            .map_while(std::io::Result::ok);
         let search_summary = summarize(matcher, "<stdin>", lines);
 
         Ok(search_summary)
